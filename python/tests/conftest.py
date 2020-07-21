@@ -30,3 +30,13 @@ def proposal_data():
         "proposal_loan_value": "1656233.0",
         "proposal_number_of_monthly_installments": "108",
     }
+
+
+@pytest.fixture
+def event_data():
+    return {
+        "event_id": "b0f68661-3937-4b94-8cb8-b7f5878f368e",
+        "event_schema": "proposal",
+        "event_action": "created",
+        "event_timestamp": "2019-11-11T14:29:16Z",
+    }
