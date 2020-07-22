@@ -36,7 +36,7 @@ def proposal_data():
 def event_data():
     return {
         "event_id": "b0f68661-3937-4b94-8cb8-b7f5878f368e",
-        "event_schema": "proposal",
-        "event_action": "created",
-        "event_timestamp": "2019-11-11T14:29:16Z",
+        "event_schema": "foo",
+        "event_action": "test",
+        "event_timestamp": "2020-01-01T00:00:00Z",
     }

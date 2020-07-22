@@ -5,17 +5,22 @@ import pytest
 from solution.handlers import BaseHandler
 
 
+@pytest.fixture
+def base_handler():
+    handler = BaseHandler()
+    handler._build_parsed_message = mock.Mock(return_value={})
+    handler._get_message_argument_name = mock.Mock(return_value="test")
+    handler.process_test = mock.Mock(return_value=True)
+    return handler
+
+
 class TestBaseHandler:
-    def test_handle(self, event_data):
-        handler = BaseHandler()
-        handler.schema_class = mock.Mock(__name__="Foo", return_value={})
-        handler.process = mock.Mock()
+    def test_handle_calls_processor_with_params(self, base_handler, event_data):
+        assert base_handler.handle(event=event_data, message={}) is True
+        base_handler.process_test.assert_called_once_with(event=event_data, test={})
 
-        assert handler.handle(event=event_data, message={}) is None
-        handler.process.assert_called_once_with(event=event_data, foo={})
-
-    def test_process(self, event_data):
-        handler = BaseHandler()
+    def test_handle_raises_not_implemented_whith_uncovered_event_action(self, base_handler, event_data):
+        event_data["event_action"] = "uncovered"
 
         with pytest.raises(NotImplementedError):
-            handler.process(event=event_data, foo={})
+            base_handler.handle(event=event_data, message={})
