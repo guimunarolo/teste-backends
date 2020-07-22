@@ -5,14 +5,14 @@ from pydantic import BaseModel
 
 
 class Warranty(BaseModel):
-    id: uuid.UUID
+    warranty_id: uuid.UUID
     proposal_id: uuid.UUID
     warranty_value: float
     warranty_province: str
 
 
 class Proponent(BaseModel):
-    id: uuid.UUID
+    proponent_id: uuid.UUID
     proposal_id: uuid.UUID
     proponent_name: str
     proponent_age: int
@@ -21,7 +21,7 @@ class Proponent(BaseModel):
 
 
 class Proposal(BaseModel):
-    id: uuid.UUID
+    proposal_id: uuid.UUID
     proposal_loan_value: float
     proposal_number_of_monthly_installments: int
     warranties: List[Warranty] = []
