@@ -5,7 +5,7 @@ from typing import Mapping
 from pydantic import BaseModel
 
 
-class Event(BaseModel):
+class EventMetadata(BaseModel):
     event_id: uuid.UUID
     event_schema: str
     event_action: str

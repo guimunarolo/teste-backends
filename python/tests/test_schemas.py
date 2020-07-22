@@ -2,12 +2,12 @@ import uuid
 
 import pytest
 
-from solution.schemas import Event, Proponent, Proposal, Warranty
+from solution.schemas import EventMetadata, Proponent, Proposal, Warranty
 
 
-class TesteEvent:
+class TesteEventMetadata:
     def test_parse(self, event_data):
-        event = Event(**event_data)
+        event = EventMetadata(**event_data)
 
         assert event.event_id == uuid.UUID(event_data["event_id"])
         assert event.event_schema == event_data["event_schema"]
