@@ -82,20 +82,26 @@ class TestProposal:
 
         assert proposal.proposal_id == uuid.UUID(proposal_data["proposal_id"])
         assert proposal.proposal_loan_value == float(proposal_data["proposal_loan_value"])
-        assert proposal.warranties == []
-        assert proposal.proponents == []
+        assert proposal.warranties == {}
+        assert proposal.proponents == {}
         expected_installments = int(proposal_data["proposal_number_of_monthly_installments"])
         assert proposal.proposal_number_of_monthly_installments == expected_installments
 
-    def test_relateds_parse(self, proposal_data, warranty_data, proponent_data):
-        proposal_data["proponents"] = [proponent_data]
-        proposal_data["warranties"] = [warranty_data]
+    def test_warranties_mapping(self, proposal_data, warranty_data):
+        warranty = Warranty(**warranty_data)
         proposal = Proposal(**proposal_data)
+        proposal.warranties[warranty.warranty_id] = warranty
 
         assert len(proposal.warranties) == 1
-        assert isinstance(proposal.warranties[0], Warranty)
+        assert proposal.warranties[warranty.warranty_id] == warranty
+
+    def test_proponent_mapping(self, proposal_data, proponent_data):
+        proponent = Proponent(**proponent_data)
+        proposal = Proposal(**proposal_data)
+        proposal.proponents[proponent.proponent_id] = proponent
+
         assert len(proposal.proponents) == 1
-        assert isinstance(proposal.proponents[0], Proponent)
+        assert proposal.proponents[proponent.proponent_id] == proponent
 
     def test_build_from_message(self, proposal_data):
         message = list(proposal_data.values())
@@ -104,5 +110,5 @@ class TestProposal:
         assert proposal.proposal_id == uuid.UUID(message[0])
         assert proposal.proposal_loan_value == float(message[1])
         assert proposal.proposal_number_of_monthly_installments == int(message[2])
-        assert proposal.warranties == []
-        assert proposal.proponents == []
+        assert proposal.warranties == {}
+        assert proposal.proponents == {}

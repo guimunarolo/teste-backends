@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import List
+from typing import Mapping
 
 from pydantic import BaseModel
 
@@ -52,8 +52,8 @@ class Proposal(BaseModel):
     proposal_id: uuid.UUID
     proposal_loan_value: float
     proposal_number_of_monthly_installments: int
-    warranties: List[Warranty] = []
-    proponents: List[Proponent] = []
+    warranties: Mapping[uuid.UUID, Warranty] = {}
+    proponents: Mapping[uuid.UUID, Proponent] = {}
 
     @classmethod
     def build_from_message(cls, message):
