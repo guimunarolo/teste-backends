@@ -1,11 +1,18 @@
 import uuid
 
 from . import stored_proposals
-from .schemas import Proposal
+from .exceptions import ReferenceDoesNotExist
+from .schemas import Proponent, Proposal
 
 
 class BaseHandler:
     schema_class = None
+
+    def _get_stored_proposal(self, proposal_id):
+        try:
+            return stored_proposals[proposal_id]
+        except KeyError:
+            raise ReferenceDoesNotExist(f"proposal_id={proposal_id}")
 
     def _build_action_kwargs(self, metadata, message):
         kwargs = {"metadata": metadata}
@@ -59,3 +66,29 @@ class ProposalHandler(BaseHandler):
     def process_deleted(sefl, metadata, proposal_id):
         # pop reference if exists
         stored_proposals.pop(proposal_id, None)
+
+
+class ProponentHandler(BaseHandler):
+    schema_class = Proponent
+
+    def process_added(self, metadata, proponent):
+        proponent_id = proponent.proponent_id
+        proposal = self._get_stored_proposal(proponent.proposal_id)
+        # idempotency to avoid overwrite
+        if proposal.proponents.get(proponent_id):
+            return
+
+        # store proponent
+        proposal.proponents[proponent_id] = proponent
+
+    def process_updated(self, metadata, proponent):
+        proponent_id = proponent.proponent_id
+        proposal = self._get_stored_proposal(proponent.proposal_id)
+
+        # update reference to updated obj
+        proposal.proponents.update({proponent_id: proponent})
+
+    def process_removed(self, metadata, parent_id, proponent_id):
+        proposal = self._get_stored_proposal(parent_id)
+        # pop reference if exist
+        proposal.proponents.pop(proponent_id, None)

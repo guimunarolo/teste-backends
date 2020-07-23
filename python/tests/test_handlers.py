@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 
 from solution import stored_proposals
-from solution.handlers import BaseHandler, ProposalHandler
+from solution.handlers import BaseHandler, ProponentHandler, ProposalHandler
 from solution.schemas import EventMetadata, Proposal
 
 
@@ -108,3 +108,39 @@ class TestProposalHandler:
 
         assert self.handler.process_deleted(proposal_deleted_metadata, proposal.proposal_id) is None
         assert stored_proposals.get(proposal.proposal_id, None) is None
+
+
+class TestProponentHandler:
+    handler = ProponentHandler()
+
+    def test_process_added_stores_proponent_in_proposal(self, proponent_added_metadata, proposal, proponent):
+        stored_proposals.update({proposal.proposal_id: proposal})
+
+        assert self.handler.process_added(proponent_added_metadata, proponent) is None
+        assert proposal.proponents.get(proponent.proponent_id) is proponent
+
+    def test_process_added_idempotency(self, proponent_added_metadata, proposal, proponent):
+        # store obj to proponent id
+        proposal.proponents = {proponent.proponent_id: {"test": 123}}
+        stored_proposals.update({proposal.proposal_id: proposal})
+
+        assert self.handler.process_added(proponent_added_metadata, proponent) is None
+        assert proposal.proponents.get(proponent.proponent_id) == {"test": 123}
+
+    def test_process_updated(self, proponent_updated_metadata, proposal, proponent):
+        # store obj to proponent id
+        proposal.proponents = {proponent.proponent_id: {"test": 123}}
+        stored_proposals.update({proposal.proposal_id: proposal})
+
+        assert self.handler.process_updated(proponent_updated_metadata, proponent) is None
+        assert proposal.proponents.get(proponent.proponent_id) is proponent
+
+    def test_process_removed(self, proponent_removed_metadata, proposal, proponent):
+        proposal_id = proposal.proposal_id
+        proponent_id = proponent.proponent_id
+        proposal.proponents = {proponent_id: proponent}
+        stored_proposals.update({proposal_id: proposal})
+
+        assert len(proposal.proponents) == 1
+        assert self.handler.process_removed(proponent_removed_metadata, proposal_id, proponent_id) is None
+        assert len(proposal.proponents) == 0

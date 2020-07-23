@@ -1,0 +1,2 @@
+class ReferenceDoesNotExist(Exception):
+    pass

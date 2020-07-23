@@ -44,6 +44,9 @@ def event_data():
     }
 
 
+# events metadatas
+
+
 @pytest.fixture
 def proposal_created_metadata(event_data):
     event_data["event_schema"] = "proposal"
@@ -63,6 +66,30 @@ def proposal_deleted_metadata(event_data):
     event_data["event_schema"] = "proposal"
     event_data["event_action"] = "deleted"
     return EventMetadata(**event_data)
+
+
+@pytest.fixture
+def proponent_added_metadata(event_data):
+    event_data["event_schema"] = "proponent"
+    event_data["event_action"] = "added"
+    return EventMetadata(**event_data)
+
+
+@pytest.fixture
+def proponent_updated_metadata(event_data):
+    event_data["event_schema"] = "proponent"
+    event_data["event_action"] = "updated"
+    return EventMetadata(**event_data)
+
+
+@pytest.fixture
+def proponent_removed_metadata(event_data):
+    event_data["event_schema"] = "proponent"
+    event_data["event_action"] = "removed"
+    return EventMetadata(**event_data)
+
+
+# schemas objs
 
 
 @pytest.fixture
