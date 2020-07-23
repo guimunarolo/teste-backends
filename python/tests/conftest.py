@@ -1,5 +1,7 @@
 import pytest
 
+from solution.schemas import EventMetadata, Proponent, Proposal, Warranty
+
 
 @pytest.fixture
 def warranty_data():
@@ -40,3 +42,39 @@ def event_data():
         "event_action": "test",
         "event_timestamp": "2020-01-01T00:00:00Z",
     }
+
+
+@pytest.fixture
+def proposal_created_metadata(event_data):
+    event_data["event_schema"] = "proposal"
+    event_data["event_action"] = "created"
+    return EventMetadata(**event_data)
+
+
+@pytest.fixture
+def proposal_updated_metadata(event_data):
+    event_data["event_schema"] = "proposal"
+    event_data["event_action"] = "updated"
+    return EventMetadata(**event_data)
+
+
+@pytest.fixture
+def proposal_deleted_metadata(event_data):
+    event_data["event_schema"] = "proposal"
+    event_data["event_action"] = "deleted"
+    return EventMetadata(**event_data)
+
+
+@pytest.fixture
+def proposal(proposal_data):
+    return Proposal(**proposal_data)
+
+
+@pytest.fixture
+def proponent(proponent_data):
+    return Proponent(**proponent_data)
+
+
+@pytest.fixture
+def warranty(warranty_data):
+    return Warranty(**warranty_data)

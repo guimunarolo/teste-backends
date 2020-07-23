@@ -3,7 +3,8 @@ from unittest import mock
 
 import pytest
 
-from solution.handlers import BaseHandler
+from solution import stored_proposals
+from solution.handlers import BaseHandler, ProposalHandler
 from solution.schemas import EventMetadata, Proposal
 
 
@@ -60,3 +61,50 @@ class TestBaseHandler:
         with pytest.raises(NotImplementedError):
             base_handler.handle(metadata, message={})
             assert base_handler._build_action_kwargs.called is False
+
+
+class TestProposalHandler:
+    handler = ProposalHandler()
+
+    def test_process_created_stores_proposal(self, proposal_created_metadata, proposal):
+        # avoid tests randomization problems
+        stored_proposals.pop(proposal.proposal_id, None)
+
+        assert self.handler.process_created(proposal_created_metadata, proposal) is None
+        assert stored_proposals.get(proposal.proposal_id) == proposal
+
+    def test_process_created_idempotency(self, proposal_created_metadata, proposal):
+        stored_proposals[proposal.proposal_id] = proposal
+
+        assert self.handler.process_created(proposal_created_metadata, proposal) is None
+        assert stored_proposals.get(proposal.proposal_id) == proposal
+
+    def test_process_updated_updates_proposal_without_loses_relateds(
+        self, proposal_updated_metadata, proposal, proponent, warranty, proposal_data
+    ):
+        # store proposal with relateds
+        proposal.proponents = {proponent.proponent_id: proponent}
+        proposal.warranties = {warranty.warranty_id: warranty}
+        stored_proposals[proposal.proposal_id] = proposal
+
+        # create non stored new proposal instance
+        updated_proposal = Proposal(**proposal_data)
+        updated_proposal.proposal_number_of_monthly_installments = 999
+
+        assert self.handler.process_updated(proposal_updated_metadata, updated_proposal) is None
+        current_stored_proposal = stored_proposals.get(proposal.proposal_id)
+        assert current_stored_proposal.proposal_number_of_monthly_installments == 999
+        assert len(current_stored_proposal.proponents) == 1
+        assert len(current_stored_proposal.warranties) == 1
+
+    def test_process_updated_with_nonexistent_proposal(self, proposal_updated_metadata, proposal):
+        stored_proposals.pop(proposal.proposal_id, None)
+
+        assert self.handler.process_updated(proposal_updated_metadata, proposal) is None
+        assert stored_proposals.get(proposal.proposal_id, None) is None
+
+    def test_process_deleted(self, proposal_deleted_metadata, proposal):
+        stored_proposals[proposal.proposal_id] = proposal
+
+        assert self.handler.process_deleted(proposal_deleted_metadata, proposal.proposal_id) is None
+        assert stored_proposals.get(proposal.proposal_id, None) is None
