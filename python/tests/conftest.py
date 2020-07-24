@@ -89,6 +89,27 @@ def proponent_removed_metadata(event_data):
     return EventMetadata(**event_data)
 
 
+@pytest.fixture
+def warranty_added_metadata(event_data):
+    event_data["event_schema"] = "warranty"
+    event_data["event_action"] = "added"
+    return EventMetadata(**event_data)
+
+
+@pytest.fixture
+def warranty_updated_metadata(event_data):
+    event_data["event_schema"] = "warranty"
+    event_data["event_action"] = "updated"
+    return EventMetadata(**event_data)
+
+
+@pytest.fixture
+def warranty_removed_metadata(event_data):
+    event_data["event_schema"] = "warranty"
+    event_data["event_action"] = "removed"
+    return EventMetadata(**event_data)
+
+
 # schemas objs
 
 

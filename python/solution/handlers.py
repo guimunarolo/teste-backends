@@ -2,7 +2,7 @@ import uuid
 
 from . import stored_proposals
 from .exceptions import ReferenceDoesNotExist
-from .schemas import Proponent, Proposal
+from .schemas import Proponent, Proposal, Warranty
 
 
 class BaseHandler:
@@ -92,3 +92,29 @@ class ProponentHandler(BaseHandler):
         proposal = self._get_stored_proposal(parent_id)
         # pop reference if exist
         proposal.proponents.pop(proponent_id, None)
+
+
+class WarrantyHandler(BaseHandler):
+    schema_class = Warranty
+
+    def process_added(self, metadata, warranty):
+        warranty_id = warranty.warranty_id
+        proposal = self._get_stored_proposal(warranty.proposal_id)
+        # idempotency to avoid overwrite
+        if proposal.warranties.get(warranty_id):
+            return
+
+        # store warranty
+        proposal.warranties[warranty_id] = warranty
+
+    def process_updated(self, metadata, warranty):
+        warranty_id = warranty.warranty_id
+        proposal = self._get_stored_proposal(warranty.proposal_id)
+
+        # update reference to updated obj
+        proposal.warranties.update({warranty_id: warranty})
+
+    def process_removed(self, metadata, parent_id, warranty_id):
+        proposal = self._get_stored_proposal(parent_id)
+        # pop reference if exist
+        proposal.warranties.pop(warranty_id, None)

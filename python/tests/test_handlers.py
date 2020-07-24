@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 
 from solution import stored_proposals
-from solution.handlers import BaseHandler, ProponentHandler, ProposalHandler
+from solution.handlers import BaseHandler, ProponentHandler, ProposalHandler, WarrantyHandler
 from solution.schemas import EventMetadata, Proposal
 
 
@@ -144,3 +144,39 @@ class TestProponentHandler:
         assert len(proposal.proponents) == 1
         assert self.handler.process_removed(proponent_removed_metadata, proposal_id, proponent_id) is None
         assert len(proposal.proponents) == 0
+
+
+class TestWarrantyHandler:
+    handler = WarrantyHandler()
+
+    def test_process_added_stores_warranty_in_proposal(self, warranty_added_metadata, proposal, warranty):
+        stored_proposals.update({proposal.proposal_id: proposal})
+
+        assert self.handler.process_added(warranty_added_metadata, warranty) is None
+        assert proposal.warranties.get(warranty.warranty_id) is warranty
+
+    def test_process_added_idempotency(self, warranty_added_metadata, proposal, warranty):
+        # store obj to warranty id
+        proposal.warranties = {warranty.warranty_id: {"test": 123}}
+        stored_proposals.update({proposal.proposal_id: proposal})
+
+        assert self.handler.process_added(warranty_added_metadata, warranty) is None
+        assert proposal.warranties.get(warranty.warranty_id) == {"test": 123}
+
+    def test_process_updated(self, warranty_updated_metadata, proposal, warranty):
+        # store obj to warranty id
+        proposal.warranties = {warranty.warranty_id: {"test": 123}}
+        stored_proposals.update({proposal.proposal_id: proposal})
+
+        assert self.handler.process_updated(warranty_updated_metadata, warranty) is None
+        assert proposal.warranties.get(warranty.warranty_id) is warranty
+
+    def test_process_removed(self, warranty_removed_metadata, proposal, warranty):
+        proposal_id = proposal.proposal_id
+        warranty_id = warranty.warranty_id
+        proposal.warranties = {warranty_id: warranty}
+        stored_proposals.update({proposal_id: proposal})
+
+        assert len(proposal.warranties) == 1
+        assert self.handler.process_removed(warranty_removed_metadata, proposal_id, warranty_id) is None
+        assert len(proposal.warranties) == 0
