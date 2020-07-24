@@ -4,11 +4,25 @@ from unittest import mock
 import pytest
 
 from solution import stored_proposals
+from solution.exceptions import ReferenceDoesNotExist
 from solution.handlers import BaseHandler, ProponentHandler, ProposalHandler, WarrantyHandler
 from solution.schemas import EventMetadata, Proposal
 
 
 class TestBaseHandler:
+    def test_get_stored_proposal(self, proposal):
+        proposal_id = proposal.proposal_id
+        stored_proposals.update({proposal_id: proposal})
+
+        assert BaseHandler()._get_stored_proposal(proposal_id) is proposal
+
+    def test_get_stored_proposal_raises_exception(self, proposal):
+        proposal_id = proposal.proposal_id
+        stored_proposals.pop(proposal_id, None)
+
+        with pytest.raises(ReferenceDoesNotExist):
+            BaseHandler()._get_stored_proposal(proposal_id)
+
     def test_build_action_kwargs_with_deleted_action(self, event_data):
         event_data["event_schema"] = "foo"
         event_data["event_action"] = "deleted"
