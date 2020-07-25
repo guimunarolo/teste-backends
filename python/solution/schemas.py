@@ -4,6 +4,16 @@ from typing import Mapping
 
 from pydantic import BaseModel
 
+from .validations import (
+    has_main_proponent_with_valid_monthly_income,
+    has_proponents_with_valid_age,
+    has_valid_loan_installments_number,
+    has_valid_loan_value,
+    has_valid_main_proponents_number,
+    has_valid_proponents_number,
+    has_valid_warranties_number_and_valid_warranted_value,
+)
+
 
 class EventMetadata(BaseModel):
     event_id: uuid.UUID
@@ -62,3 +72,21 @@ class Proposal(BaseModel):
             proposal_loan_value=message[1],
             proposal_number_of_monthly_installments=message[2],
         )
+
+    def get_validations(self):
+        return (
+            has_valid_loan_value,
+            has_valid_loan_installments_number,
+            has_valid_proponents_number,
+            has_valid_main_proponents_number,
+            has_proponents_with_valid_age,
+            has_valid_warranties_number_and_valid_warranted_value,
+            has_main_proponent_with_valid_monthly_income,
+        )
+
+    def is_valid(self):
+        for validate in self.get_validations():
+            if not validate(proposal=self):
+                return False
+
+        return True

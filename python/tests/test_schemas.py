@@ -1,4 +1,5 @@
 import uuid
+from unittest import mock
 
 import pytest
 
@@ -112,3 +113,26 @@ class TestProposal:
         assert proposal.proposal_number_of_monthly_installments == int(message[2])
         assert proposal.warranties == {}
         assert proposal.proponents == {}
+
+    def test_get_validations(self, proposal):
+        assert isinstance(proposal.get_validations(), tuple)
+
+    @mock.patch("solution.schemas.Proposal.get_validations")
+    def test_is_valid_returns_when_has_first_invalidation(self, mock_get_validations, proposal):
+        first_validation = mock.Mock(return_value=False)
+        second_validation = mock.Mock(return_value=True)
+        mock_get_validations.return_value = (first_validation, second_validation)
+
+        assert proposal.is_valid() is False
+        assert first_validation.called is True
+        assert second_validation.called is False
+
+    @mock.patch("solution.schemas.Proposal.get_validations")
+    def test_is_valid_runs_all_validations(self, mock_get_validations, proposal):
+        first_validation = mock.Mock(return_value=True)
+        second_validation = mock.Mock(return_value=True)
+        mock_get_validations.return_value = (first_validation, second_validation)
+
+        assert proposal.is_valid() is True
+        assert first_validation.called is True
+        assert second_validation.called is True
