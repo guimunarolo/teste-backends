@@ -1,6 +1,5 @@
 import uuid
 
-from . import stored_proposals
 from .exceptions import ReferenceDoesNotExist
 from .schemas import Proponent, Proposal, Warranty
 
@@ -8,9 +7,12 @@ from .schemas import Proponent, Proposal, Warranty
 class BaseHandler:
     schema_class = None
 
+    def __init__(self, stored_proposals):
+        self.stored_proposals = stored_proposals
+
     def _get_stored_proposal(self, proposal_id):
         try:
-            return stored_proposals[proposal_id]
+            return self.stored_proposals[proposal_id]
         except KeyError:
             raise ReferenceDoesNotExist(f"proposal_id={proposal_id}")
 
@@ -43,15 +45,15 @@ class ProposalHandler(BaseHandler):
     def process_created(self, metadata, proposal):
         proposal_id = proposal.proposal_id
         # idempotency to avoid overwrite
-        if stored_proposals.get(proposal_id):
+        if self.stored_proposals.get(proposal_id):
             return
 
         # store proposal
-        stored_proposals[proposal_id] = proposal
+        self.stored_proposals[proposal_id] = proposal
 
     def process_updated(self, metadata, proposal):
         proposal_id = proposal.proposal_id
-        current_proposal = stored_proposals.get(proposal_id)
+        current_proposal = self.stored_proposals.get(proposal_id)
         # cant updated if doesnt exists
         if not current_proposal:
             return
@@ -61,11 +63,11 @@ class ProposalHandler(BaseHandler):
         proposal.proponents = current_proposal.proponents
 
         # update reference to updated obj
-        stored_proposals[proposal_id] = proposal
+        self.stored_proposals[proposal_id] = proposal
 
-    def process_deleted(sefl, metadata, proposal_id):
+    def process_deleted(self, metadata, proposal_id):
         # pop reference if exists
-        stored_proposals.pop(proposal_id, None)
+        self.stored_proposals.pop(proposal_id, None)
 
 
 class ProponentHandler(BaseHandler):
